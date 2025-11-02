@@ -13,18 +13,27 @@ from sklearn.metrics import accuracy_score
 df = pd.read_csv('data/nfl_pbp_2019_2022.csv')
 
 pprint( df.head() )
-print("___" * 50)
-pprint( list( df.columns ) )
 
-df_pass = df[ ['complete_pass', 'ydstogo', 'yardline_100', 'quarter_seconds_remaining'] + ['down', 'play_type', 'shotgun', 'posteam', 'defteam']]
+complete_cols  = ['game_id', 'home_team', 'away_team', 'season_type', 'week'] + ['stadium', 'roof', 'surface', 'temp', 'wind'] + ['home_coach', 'away_coach', 'home_opening_kickoff']
 
-df_pass = df_pass[df_pass['complete_pass'].notna()].reset_index(drop=True)
+df_winner = df[complete_cols + ['posteam', 'defteam', 'total_home_score', 'total_away_score']]
+
+print(df_winner)
+
+df_winner.to_csv('data/cleaned/nfl_winner_predict_2019_2022.csv', index=False)
+
+# print("___" * 50)
+# pprint( list( df.columns ) )
+
+# df_pass = df[ ['complete_pass', 'ydstogo', 'yardline_100', 'quarter_seconds_remaining'] + ['down', 'play_type', 'shotgun', 'posteam', 'defteam']]
+
+# df_pass = df_pass[df_pass['complete_pass'].notna()].reset_index(drop=True)
 
 
-pprint( df_pass.head() )
+# pprint( df_pass.head() )
 
 
-print("___" * 50)
+# print("___" * 50)
 
 def test(df_pass):
     target = 'complete_pass'
@@ -73,4 +82,8 @@ def test(df_pass):
     
 # df_pass.to_csv('data/cleaned/processed_nfl_pass_data.csv', index=False)
 
-print(len(list(df.columns) ))
+# print(len(list(df.columns) ))
+
+# pprint( df["season_type"].unique() )
+
+
