@@ -1,1 +1,10 @@
 data/nfl_pbp_2019_2022.csv
+__pycache__/
+*.pyc
+
+output/
+
+env/
+venv/
+.DS_Store
+
