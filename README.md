@@ -35,6 +35,36 @@ SnapPredict/
 └── README.md
 ```
 
+## Directory Structure Details
+
+### Data Directory
+/data/: Contains all raw and cleaned datasets
+
+/data/cleaned/: Holds our processed CSV files ready for model use
+- /data/cleaned/nfl_winner_predict_2019_2022.csv: Historical NFL game data used for training
+- /data/cleaned/processed_nfl_pass_data.csv: Additional NFL passing statistics
+
+### Source Code
+/src/: Main code directory for the project
+- /src/prep_features.py: Prepares and cleans data for model training
+- /src/train_models.py: Creates and saves our prediction models
+- /src/evaluate_models.py: Tests how well our models perform
+- /src/predict_winner.py: Makes predictions for new NFL games
+
+### Output Directory
+/output/: Where we store all generated files
+
+/output/models/: Trained models and related files
+- /output/models/features.csv: Final dataset used for training
+- /output/models/logistic_model.pkl: Our logistic regression model
+- /output/models/rf_model.pkl: Our random forest model
+- /output/models/encoders.pkl: Tools for converting team names and other text data
+- /output/models/test_data.pkl: Data we use to test model accuracy
+
+/output/predictions/: Visual results from our predictions
+- /output/predictions/prediction_*.png: Charts showing win probabilities
+- /output/predictions/winner_*.png: Graphics announcing predicted winners
+
 ## Getting Started
 
 1. Ensure you have Python installed with the required packages:
