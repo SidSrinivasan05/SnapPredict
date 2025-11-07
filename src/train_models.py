@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
 
-FEATURES_CSV = "output/models/features.csv"
+FEATURES_CSV = "data/cleaned/nfl_winner_predict_2019_2022.csv"
 OUT_DIR = "output/models"
 LOGISTIC_MODEL = os.path.join(OUT_DIR, "logistic_model.pkl")
 RF_MODEL = os.path.join(OUT_DIR, "rf_model.pkl")
