@@ -2,7 +2,16 @@ data/nfl_pbp_2019_2022.csv
 __pycache__/
 *.pyc
 
-output/
+# Ignore everything inside output by default
+output/*
+
+# BUT keep the model artifacts and features dataset
+!output/models/
+!output/models/*
+
+# Still ignore graphs and predictions (they can be recreated)
+output/graphs/
+output/predictions/
 
 env/
 venv/
