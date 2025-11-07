@@ -50,12 +50,17 @@ SnapPredict/
    cd SnapPredict
    ```
 
-3. Train the models:
+3. Install required packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Train the models:
    ```bash
    python src/train_models.py
    ```
 
-4. Make predictions:
+5. Make predictions:
    ```bash
    python src/predict_winner.py
    ```
