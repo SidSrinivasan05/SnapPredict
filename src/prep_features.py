@@ -33,9 +33,8 @@ def main():
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # Keep final modeling columns (features + label)
     model_cols = [
-        "game_id",                 # kept for traceability (dropped before training)
+        "game_id",                
         "home_team", "away_team",
         "season_type", "week",
         "stadium", "roof", "surface",
@@ -44,11 +43,10 @@ def main():
     ]
     df = df[model_cols]
 
-    # Drop rows with missing essentials (teams/scores/week)
     df = df.dropna(subset=["home_team", "away_team", "week", "home_win"])
 
     df.to_csv(OUT_CSV, index=False)
-    print(f"✅ Created feature file: {OUT_CSV}")
+    print(f"Created feature file: {OUT_CSV}")
 
 if __name__ == "__main__":
     main()

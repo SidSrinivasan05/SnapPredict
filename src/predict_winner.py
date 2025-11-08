@@ -31,7 +31,6 @@ def get_valid_options(encoder, field_name):
     """Get valid options for a categorical field"""
     if field_name in encoder:
         options = list(encoder[field_name].classes_)
-        # Remove 'Unknown' if it exists
         options = [opt for opt in options if opt != 'Unknown']
         return sorted(options)
     return []
@@ -42,40 +41,33 @@ def get_user_input(encoders):
     print("NFL GAME WINNER PREDICTION")
     print("="*60)
     
-    # Get teams
     teams = get_valid_options(encoders, "home_team")
     print(f"\nAvailable teams: {', '.join(teams[:10])}... ({len(teams)} total)")
     
     home_team = input("\nEnter HOME team: ").strip()
     away_team = input("Enter AWAY team: ").strip()
     
-    # Season type
     season_types = get_valid_options(encoders, "season_type")
     print(f"\nSeason types: {', '.join(season_types)}")
     season_type = input("Enter season type (e.g., REG, POST): ").strip() or "REG"
     
-    # Week
     week = input("Enter week number (1-18): ").strip()
     week = int(week) if week else 1
     
-    # Stadium
     stadiums = get_valid_options(encoders, "stadium")
     print(f"\nAvailable stadiums: {', '.join(stadiums[:5])}... ({len(stadiums)} total)")
     stadium = input("Enter stadium name (press Enter for home team's stadium): ").strip()
     if not stadium:
         stadium = "Unknown"
     
-    # Roof
     roofs = get_valid_options(encoders, "roof")
     print(f"\nRoof types: {', '.join(roofs)}")
     roof = input("Enter roof type (e.g., outdoors, dome, retractable): ").strip() or "outdoors"
     
-    # Surface
     surfaces = get_valid_options(encoders, "surface")
     print(f"\nSurface types: {', '.join(surfaces)}")
     surface = input("Enter surface type (e.g., grass, fieldturf): ").strip() or "grass"
     
-    # Weather
     temp = input("\nEnter temperature (°F, press Enter to skip): ").strip()
     temp = float(temp) if temp else None
     
@@ -100,7 +92,6 @@ def encode_game_data(game_data, encoders):
     """Encode user input using trained encoders"""
     encoded_data = {}
     
-    # Load feature CSV to get median values for missing data
     df = pd.read_csv(FEATURES_CSV)
     
     categorical_cols = ["home_team", "away_team", "season_type", "stadium", "roof", "surface"]
@@ -111,11 +102,9 @@ def encode_game_data(game_data, encoders):
             try:
                 encoded_data[col] = encoders[col].transform([value])[0]
             except ValueError:
-                # If value not in encoder, use most common value
                 print(f"Warning: '{value}' not found in {col}, using default")
                 encoded_data[col] = 0
     
-    # Numeric features
     encoded_data["week"] = game_data.get("week", 1)
     encoded_data["temp"] = game_data.get("temp") if game_data.get("temp") else df["temp"].median()
     encoded_data["wind"] = game_data.get("wind") if game_data.get("wind") else df["wind"].median()
@@ -124,15 +113,12 @@ def encode_game_data(game_data, encoders):
 
 def predict_winner(lr_model, rf_model, encoded_data, game_data):
     """Make predictions using both models"""
-    # Create feature array in correct order
     feature_order = ["home_team", "away_team", "season_type", "week", "stadium", "roof", "surface", "temp", "wind"]
     X = np.array([[encoded_data[f] for f in feature_order]])
     
-    # Logistic Regression prediction
     lr_pred = lr_model.predict(X)[0]
     lr_proba = lr_model.predict_proba(X)[0]
     
-    # Random Forest prediction
     rf_pred = rf_model.predict(X)[0]
     rf_proba = rf_model.predict_proba(X)[0]
     
@@ -173,16 +159,15 @@ def display_results(game_data, results):
     print(f"  {game_data['home_team']} (Home): {results['rf_home_prob']:.1f}% win probability")
     print(f"  {game_data['away_team']} (Away): {results['rf_away_prob']:.1f}% win probability")
     
-    # Consensus
     print("\n" + "="*60)
     if results['lr_winner'] == results['rf_winner']:
-        print(f"🏈 CONSENSUS PICK: {results['lr_winner']}")
+        print(f"CONSENSUS PICK: {results['lr_winner']}")
         avg_prob = (results['lr_home_prob'] if results['lr_winner'] == game_data['home_team'] 
                    else results['lr_away_prob'] + results['rf_home_prob'] if results['rf_winner'] == game_data['home_team'] 
                    else results['rf_away_prob']) / 2
         print(f"   Average Win Probability: {avg_prob:.1f}%")
     else:
-        print("⚠️  MODELS DISAGREE")
+        print("MODELS DISAGREE")
         print(f"   Logistic Regression picks: {results['lr_winner']}")
         print(f"   Random Forest picks: {results['rf_winner']}")
     print("="*60)
@@ -192,11 +177,9 @@ def plot_prediction_graphs(game_data, results):
     os.makedirs(GRAPHS_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    # Create figure with subplots
     fig = plt.figure(figsize=(16, 10))
     gs = fig.add_gridspec(2, 2, hspace=0.3, wspace=0.3)
     
-    # Subplot 1: Probability comparison bar chart
     ax1 = fig.add_subplot(gs[0, :])
     
     teams = [game_data['home_team'], game_data['away_team']]
@@ -222,14 +205,12 @@ def plot_prediction_graphs(game_data, results):
     ax1.grid(axis='y', alpha=0.3)
     ax1.axhline(y=50, color='red', linestyle='--', linewidth=1, alpha=0.5)
     
-    # Add percentage labels on bars
     for bars in [bars1, bars2]:
         for bar in bars:
             height = bar.get_height()
             ax1.text(bar.get_x() + bar.get_width()/2., height,
                     f'{height:.1f}%', ha='center', va='bottom', fontsize=10)
-    
-    # Subplot 2: Model confidence comparison (pie chart for LR)
+
     ax2 = fig.add_subplot(gs[1, 0])
     
     colors = ['#4CAF50' if results['lr_winner'] == game_data['home_team'] else '#FF9800',
@@ -245,7 +226,6 @@ def plot_prediction_graphs(game_data, results):
     )
     ax2.set_title('Logistic Regression\nPrediction', fontsize=12, fontweight='bold')
     
-    # Subplot 3: Model confidence comparison (pie chart for RF)
     ax3 = fig.add_subplot(gs[1, 1])
     
     colors = ['#4CAF50' if results['rf_winner'] == game_data['home_team'] else '#FF9800',
@@ -261,7 +241,6 @@ def plot_prediction_graphs(game_data, results):
     )
     ax3.set_title('Random Forest\nPrediction', fontsize=12, fontweight='bold')
     
-    # Add game info text
     game_info = f"Week {game_data['week']} - {game_data['season_type']}\n"
     game_info += f"{game_data['stadium']} ({game_data['roof']}, {game_data['surface']})"
     if game_data.get('temp'):
@@ -270,14 +249,13 @@ def plot_prediction_graphs(game_data, results):
     fig.text(0.5, 0.02, game_info, ha='center', fontsize=10, 
              bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
     
-    # Save figure
     filename = f"prediction_{game_data['away_team']}_at_{game_data['home_team']}_{timestamp}.png"
     output_path = os.path.join(GRAPHS_DIR, filename)
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"\n✅ Prediction graphs saved: {output_path}")
+    print(f"\n Prediction graphs saved: {output_path}")
     plt.close()
     
-    # Create a simple winner announcement graph
+
     create_winner_graphic(game_data, results, timestamp)
 
 def create_winner_graphic(game_data, results, timestamp):
@@ -285,24 +263,20 @@ def create_winner_graphic(game_data, results, timestamp):
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.axis('off')
     
-    # Determine consensus winner
     consensus = results['lr_winner'] == results['rf_winner']
     winner = results['lr_winner'] if consensus else "SPLIT DECISION"
     
-    # Background color based on consensus
     fig.patch.set_facecolor('#1a1a2e' if consensus else '#333333')
     
-    # Title
-    title_text = "🏈 PREDICTED WINNER 🏈" if consensus else "⚠️ SPLIT DECISION ⚠️"
+    title_text = "PREDICTED WINNER" if consensus else "SPLIT DECISION"
     ax.text(0.5, 0.85, title_text, fontsize=32, fontweight='bold',
             ha='center', va='center', color='white')
-    
-    # Winner/Matchup
+
     if consensus:
         ax.text(0.5, 0.65, winner, fontsize=48, fontweight='bold',
                 ha='center', va='center', color='#4CAF50')
         
-        # Probability
+
         avg_prob = (results['lr_home_prob'] if winner == game_data['home_team'] 
                    else results['lr_away_prob'] + 
                    results['rf_home_prob'] if winner == game_data['home_team'] 
@@ -316,14 +290,14 @@ def create_winner_graphic(game_data, results, timestamp):
         ax.text(0.5, 0.50, f"RF: {results['rf_winner']}", fontsize=28,
                 ha='center', va='center', color='#4CAF50')
     
-    # Matchup details
+
     matchup = f"{game_data['away_team']} @ {game_data['home_team']}"
     ax.text(0.5, 0.30, matchup, fontsize=20, ha='center', va='center', color='white')
     
     details = f"Week {game_data['week']} • {game_data['season_type']} • {game_data['stadium']}"
     ax.text(0.5, 0.20, details, fontsize=14, ha='center', va='center', color='lightgray')
     
-    # Model agreement
+
     agreement_text = "Both models agree" if consensus else "Models disagree - use caution"
     ax.text(0.5, 0.10, agreement_text, fontsize=12, ha='center', va='center',
             color='#4CAF50' if consensus else '#FF9800', style='italic')
@@ -331,34 +305,27 @@ def create_winner_graphic(game_data, results, timestamp):
     filename = f"winner_{game_data['away_team']}_at_{game_data['home_team']}_{timestamp}.png"
     output_path = os.path.join(GRAPHS_DIR, filename)
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor())
-    print(f"✅ Winner graphic saved: {output_path}")
+    print(f"Winner graphic saved: {output_path}")
     plt.close()
 
 def main():
-    # Load models
     print("Loading models...")
     lr_model, rf_model, encoders = load_models_and_encoders()
     
-    # Get user input
     game_data = get_user_input(encoders)
     
-    # Encode data
     print("\nProcessing prediction...")
     encoded_data = encode_game_data(game_data, encoders)
     
-    # Make prediction
     results = predict_winner(lr_model, rf_model, encoded_data, game_data)
     
-    # Display results
     display_results(game_data, results)
     
-    # Generate graphs
     print("\nGenerating prediction visualizations...")
     plot_prediction_graphs(game_data, results)
     
-    print("\n✅ Prediction complete!")
+    print("\nPrediction complete!")
     
-    # Ask if user wants another prediction
     another = input("\nPredict another game? (y/n): ").strip().lower()
     if another == 'y':
         main()
