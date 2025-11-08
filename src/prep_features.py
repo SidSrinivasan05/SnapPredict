@@ -19,21 +19,16 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     df = pd.read_csv(RAW_PATH)
 
-    # Keep only the columns we need (ignore others if present)
     missing = [c for c in USE_COLS if c not in df.columns]
     if missing:
         raise ValueError(f"Missing required columns in CSV: {missing}")
 
     df = df[USE_COLS].copy()
 
-    # Deduplicate to one row per game_id in case multiple rows exist
     df = df.sort_values("game_id").drop_duplicates(subset=["game_id"], keep="first")
 
-    # Label: 1 if home team won
     df["home_win"] = (df["total_home_score"] > df["total_away_score"]).astype(int)
 
-    # Basic cleaning / types
-    # Enforce numeric for week/temp/wind if present as strings
     for col in ["week", "temp", "wind"]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")

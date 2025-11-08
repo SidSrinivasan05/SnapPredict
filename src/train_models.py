@@ -25,7 +25,6 @@ def encode_features(df):
     for col in categorical_cols:
         if col in df_encoded.columns:
             le = LabelEncoder()
-            # Handle missing values by filling with 'Unknown'
             df_encoded[col] = df_encoded[col].fillna('Unknown')
             df_encoded[col] = le.fit_transform(df_encoded[col])
             encoders[col] = le
@@ -34,11 +33,9 @@ def encode_features(df):
 
 def prepare_data(df):
     """Prepare features and target for modeling"""
-    # Drop game_id (just for tracking)
     X = df.drop(columns=["game_id", "home_win"], errors="ignore")
     y = df["home_win"]
     
-    # Fill missing numeric values with median
     numeric_cols = ["week", "temp", "wind"]
     for col in numeric_cols:
         if col in X.columns:
@@ -53,22 +50,19 @@ def train_logistic_regression(X_train, y_train, X_test, y_test):
     lr_model = LogisticRegression(max_iter=1000, random_state=42)
     lr_model.fit(X_train, y_train)
     
-    # Calculate accuracies
     lr_train_acc = accuracy_score(y_train, lr_model.predict(X_train))
     lr_test_acc = accuracy_score(y_test, lr_model.predict(X_test))
     
     print(f"Train Accuracy: {lr_train_acc:.4f}")
     print(f"Test Accuracy: {lr_test_acc:.4f}")
     
-    # Print classification report
     print("\nClassification Report:")
     print(classification_report(y_test, lr_model.predict(X_test), 
                                 target_names=["Away Win", "Home Win"]))
     
-    # Save model
     with open(LOGISTIC_MODEL, "wb") as f:
         pickle.dump(lr_model, f)
-    print(f"✅ Model saved: {LOGISTIC_MODEL}")
+    print(f"Model saved: {LOGISTIC_MODEL}")
     
     return lr_model
 
@@ -84,22 +78,19 @@ def train_random_forest(X_train, y_train, X_test, y_test):
     )
     rf_model.fit(X_train, y_train)
     
-    # Calculate accuracies
     rf_train_acc = accuracy_score(y_train, rf_model.predict(X_train))
     rf_test_acc = accuracy_score(y_test, rf_model.predict(X_test))
     
     print(f"Train Accuracy: {rf_train_acc:.4f}")
     print(f"Test Accuracy: {rf_test_acc:.4f}")
     
-    # Print classification report
     print("\nClassification Report:")
     print(classification_report(y_test, rf_model.predict(X_test),
                                 target_names=["Away Win", "Home Win"]))
     
-    # Save model
     with open(RF_MODEL, "wb") as f:
         pickle.dump(rf_model, f)
-    print(f"✅ Model saved: {RF_MODEL}")
+    print(f"Model saved: {RF_MODEL}")
     
     return rf_model
 
@@ -109,19 +100,15 @@ def load_and_prepare_data():
     df = pd.read_csv(FEATURES_CSV)
     print(f"Loaded {len(df)} games")
     
-    # Encode categorical features
     print("Encoding categorical features...")
     df_encoded, encoders = encode_features(df)
     
-    # Save encoders
     with open(ENCODERS_FILE, "wb") as f:
         pickle.dump(encoders, f)
-    print(f"✅ Encoders saved: {ENCODERS_FILE}")
+    print(f"Encoders saved: {ENCODERS_FILE}")
     
-    # Prepare X and y
     X, y = prepare_data(df_encoded)
     
-    # Train-test split (80-20)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
@@ -129,7 +116,6 @@ def load_and_prepare_data():
     print(f"Training set: {len(X_train)} samples")
     print(f"Test set: {len(X_test)} samples")
     
-    # Save test data for evaluation
     with open(TEST_DATA_FILE, "wb") as f:
         pickle.dump({
             "X_train": X_train,
@@ -138,24 +124,21 @@ def load_and_prepare_data():
             "y_test": y_test,
             "feature_names": X.columns.tolist()
         }, f)
-    print(f"✅ Test data saved: {TEST_DATA_FILE}")
+    print(f"Test data saved: {TEST_DATA_FILE}")
     
     return X_train, X_test, y_train, y_test
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     
-    # Load and prepare data
     X_train, X_test, y_train, y_test = load_and_prepare_data()
     
-    # Train Logistic Regression
     lr_model = train_logistic_regression(X_train, y_train, X_test, y_test)
     
-    # Train Random Forest
     rf_model = train_random_forest(X_train, y_train, X_test, y_test)
     
     print("\n" + "="*60)
-    print("✅ All models trained successfully!")
+    print("All models trained successfully!")
     print("="*60)
 
 if __name__ == "__main__":
