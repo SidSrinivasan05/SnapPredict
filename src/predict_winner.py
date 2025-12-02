@@ -35,7 +35,6 @@ def get_valid_options(encoder, field_name):
     """Get valid options for a categorical field"""
     if field_name in encoder:
         options = list(encoder[field_name].classes_)
-        # Remove 'Unknown' if it exists
         options = [opt for opt in options if opt != 'Unknown']
         return sorted(options)
     return []
@@ -46,40 +45,33 @@ def get_user_input(encoders):
     print("NFL GAME WINNER PREDICTION")
     print("="*60)
     
-    # Get teams
     teams = get_valid_options(encoders, "home_team")
     print(f"\nAvailable teams: {', '.join(teams[:10])}... ({len(teams)} total)")
     
     home_team = input("\nEnter HOME team: ").strip()
     away_team = input("Enter AWAY team: ").strip()
     
-    # Season type
     season_types = get_valid_options(encoders, "season_type")
     print(f"\nSeason types: {', '.join(season_types)}")
     season_type = input("Enter season type (e.g., REG, POST): ").strip() or "REG"
     
-    # Week
     week = input("Enter week number (1-18): ").strip()
     week = int(week) if week else 1
     
-    # Stadium
     stadiums = get_valid_options(encoders, "stadium")
     print(f"\nAvailable stadiums: {', '.join(stadiums[:5])}... ({len(stadiums)} total)")
     stadium = input("Enter stadium name (press Enter for home team's stadium): ").strip()
     if not stadium:
         stadium = "Unknown"
     
-    # Roof
     roofs = get_valid_options(encoders, "roof")
     print(f"\nRoof types: {', '.join(roofs)}")
     roof = input("Enter roof type (e.g., outdoors, dome, retractable): ").strip() or "outdoors"
     
-    # Surface
     surfaces = get_valid_options(encoders, "surface")
     print(f"\nSurface types: {', '.join(surfaces)}")
     surface = input("Enter surface type (e.g., grass, fieldturf): ").strip() or "grass"
     
-    # Weather
     temp = input("\nEnter temperature (°F, press Enter to skip): ").strip()
     temp = float(temp) if temp else None
     
@@ -104,7 +96,6 @@ def encode_game_data(game_data, encoders):
     """Encode user input using trained encoders"""
     encoded_data = {}
     
-    # Load feature CSV to get median values for missing data
     df = pd.read_csv(FEATURES_CSV)
     
     categorical_cols = ["home_team", "away_team", "season_type", "stadium", "roof", "surface"]
@@ -115,11 +106,9 @@ def encode_game_data(game_data, encoders):
             try:
                 encoded_data[col] = encoders[col].transform([value])[0]
             except ValueError:
-                # If value not in encoder, use most common value
                 print(f"Warning: '{value}' not found in {col}, using default")
                 encoded_data[col] = 0
     
-    # Numeric features
     encoded_data["week"] = game_data.get("week", 1)
     encoded_data["temp"] = game_data.get("temp") if game_data.get("temp") else df["temp"].median()
     encoded_data["wind"] = game_data.get("wind") if game_data.get("wind") else df["wind"].median()
@@ -132,11 +121,9 @@ def predict_winner(lr_model, rf_model, xgb_model, encoded_data, game_data):
     feature_order = ["home_team", "away_team", "season_type", "week", "stadium", "roof", "surface", "temp", "wind"]
     X = np.array([[encoded_data[f] for f in feature_order]])
     
-    # Logistic Regression prediction
     lr_pred = lr_model.predict(X)[0]
     lr_proba = lr_model.predict_proba(X)[0]
     
-    # Random Forest prediction
     rf_pred = rf_model.predict(X)[0]
     rf_proba = rf_model.predict_proba(X)[0]
     
@@ -329,14 +316,13 @@ def plot_prediction_graphs(game_data, results):
     fig.text(0.5, 0.02, game_info, ha='center', fontsize=10, 
              bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
     
-    # Save figure
     filename = f"prediction_{game_data['away_team']}_at_{game_data['home_team']}_{timestamp}.png"
     output_path = os.path.join(GRAPHS_DIR, filename)
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"\n✅ Prediction graphs saved: {output_path}")
+    print(f"\n Prediction graphs saved: {output_path}")
     plt.close()
     
-    # Create a simple winner announcement graph
+
     create_winner_graphic(game_data, results, timestamp)
 
 def create_winner_graphic(game_data, results, timestamp):
@@ -393,7 +379,7 @@ def create_winner_graphic(game_data, results, timestamp):
         ax.text(0.5, 0.45, f"XGB: {results['xgb_winner']}", fontsize=22,
                 ha='center', va='center', color='#FF9800')
     
-    # Matchup details
+
     matchup = f"{game_data['away_team']} @ {game_data['home_team']}"
     ax.text(0.5, 0.30, matchup, fontsize=20, ha='center', va='center', color='white')
     
@@ -417,34 +403,28 @@ def create_winner_graphic(game_data, results, timestamp):
     filename = f"winner_{game_data['away_team']}_at_{game_data['home_team']}_{timestamp}.png"
     output_path = os.path.join(GRAPHS_DIR, filename)
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor())
-    print(f"✅ Winner graphic saved: {output_path}")
+    print(f"Winner graphic saved: {output_path}")
     plt.close()
 
 def main():
-    # Load models
     print("Loading models...")
     lr_model, rf_model, xgb_model, encoders = load_models_and_encoders()
     
-    # Get user input
     game_data = get_user_input(encoders)
     
-    # Encode data
     print("\nProcessing prediction...")
     encoded_data = encode_game_data(game_data, encoders)
     
     # Make prediction
     results = predict_winner(lr_model, rf_model, xgb_model, encoded_data, game_data)
     
-    # Display results
     display_results(game_data, results)
     
-    # Generate graphs
     print("\nGenerating prediction visualizations...")
     plot_prediction_graphs(game_data, results)
     
-    print("\n✅ Prediction complete!")
+    print("\nPrediction complete!")
     
-    # Ask if user wants another prediction
     another = input("\nPredict another game? (y/n): ").strip().lower()
     if another == 'y':
         main()

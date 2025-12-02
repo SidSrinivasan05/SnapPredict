@@ -40,7 +40,6 @@ def plot_confusion_matrices(y_test, lr_pred, rf_pred, xgb_pred):
     """Create confusion matrix comparison for all three models"""
     fig, axes = plt.subplots(1, 3, figsize=(18, 5))
     
-    # Logistic Regression
     cm_lr = confusion_matrix(y_test, lr_pred)
     sns.heatmap(cm_lr, annot=True, fmt='d', cmap='Blues', ax=axes[0],
                 xticklabels=['Away Win', 'Home Win'],
@@ -49,7 +48,6 @@ def plot_confusion_matrices(y_test, lr_pred, rf_pred, xgb_pred):
     axes[0].set_ylabel('Actual', fontsize=12)
     axes[0].set_xlabel('Predicted', fontsize=12)
     
-    # Random Forest
     cm_rf = confusion_matrix(y_test, rf_pred)
     sns.heatmap(cm_rf, annot=True, fmt='d', cmap='Greens', ax=axes[1],
                 xticklabels=['Away Win', 'Home Win'],
@@ -70,18 +68,16 @@ def plot_confusion_matrices(y_test, lr_pred, rf_pred, xgb_pred):
     plt.tight_layout()
     output_path = os.path.join(GRAPHS_DIR, "confusion_matrices.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 def plot_roc_curves(y_test, lr_proba, rf_proba, xgb_proba):
     """Create ROC curve comparison for all three models"""
     fig, ax = plt.subplots(figsize=(10, 8))
     
-    # Logistic Regression ROC
     fpr_lr, tpr_lr, _ = roc_curve(y_test, lr_proba[:, 1])
     roc_auc_lr = auc(fpr_lr, tpr_lr)
     
-    # Random Forest ROC
     fpr_rf, tpr_rf, _ = roc_curve(y_test, rf_proba[:, 1])
     roc_auc_rf = auc(fpr_rf, tpr_rf)
     
@@ -110,7 +106,7 @@ def plot_roc_curves(y_test, lr_proba, rf_proba, xgb_proba):
     plt.tight_layout()
     output_path = os.path.join(GRAPHS_DIR, "roc_curves.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 def plot_feature_importance_comparison(rf_model, xgb_model, feature_names):
@@ -144,17 +140,15 @@ def plot_feature_importance_comparison(rf_model, xgb_model, feature_names):
     plt.tight_layout()
     output_path = os.path.join(GRAPHS_DIR, "feature_importance_comparison.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 def plot_precision_recall_curves(y_test, lr_proba, rf_proba, xgb_proba):
     """Create Precision-Recall curve comparison for all three models"""
     fig, ax = plt.subplots(figsize=(10, 8))
     
-    # Logistic Regression
     precision_lr, recall_lr, _ = precision_recall_curve(y_test, lr_proba[:, 1])
     
-    # Random Forest
     precision_rf, recall_rf, _ = precision_recall_curve(y_test, rf_proba[:, 1])
     
     # XGBoost
@@ -179,7 +173,7 @@ def plot_precision_recall_curves(y_test, lr_proba, rf_proba, xgb_proba):
     plt.tight_layout()
     output_path = os.path.join(GRAPHS_DIR, "precision_recall_curves.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 def plot_model_comparison_metrics(y_test, lr_pred, rf_pred, xgb_pred, lr_proba, rf_proba, xgb_proba):
@@ -248,7 +242,7 @@ def plot_model_comparison_metrics(y_test, lr_pred, rf_pred, xgb_pred, lr_proba, 
     plt.tight_layout()
     output_path = os.path.join(GRAPHS_DIR, "model_comparison.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 def plot_xgboost_learning_curve(xgb_model):
@@ -315,7 +309,7 @@ def plot_logistic_coefficients(lr_model, feature_names):
 
     output_path = os.path.join(GRAPHS_DIR, "logistic_coefficients.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 def plot_logistic_calibration_curve(y_test, lr_proba):
@@ -335,7 +329,7 @@ def plot_logistic_calibration_curve(y_test, lr_proba):
 
     output_path = os.path.join(GRAPHS_DIR, "logistic_calibration_curve.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 def plot_logistic_probability_distribution(y_test, lr_proba):
@@ -354,7 +348,7 @@ def plot_logistic_probability_distribution(y_test, lr_proba):
 
     output_path = os.path.join(GRAPHS_DIR, "logistic_probability_distribution.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 def create_model_analysis_summary(y_test, lr_pred, rf_pred, xgb_pred, lr_proba, rf_proba, xgb_proba):
