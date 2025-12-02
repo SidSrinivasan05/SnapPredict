@@ -7,11 +7,13 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
+import xgboost as xgb
 
 FEATURES_CSV = "output/models/features.csv"
 OUT_DIR = "output/models"
 LOGISTIC_MODEL = os.path.join(OUT_DIR, "logistic_model.pkl")
 RF_MODEL = os.path.join(OUT_DIR, "rf_model.pkl")
+XGB_MODEL = os.path.join(OUT_DIR, "xgb_model.pkl")
 ENCODERS_FILE = os.path.join(OUT_DIR, "encoders.pkl")
 TEST_DATA_FILE = os.path.join(OUT_DIR, "test_data.pkl")
 
@@ -53,19 +55,16 @@ def train_logistic_regression(X_train, y_train, X_test, y_test):
     lr_model = LogisticRegression(max_iter=1000, random_state=42)
     lr_model.fit(X_train, y_train)
     
-    # Calculate accuracies
     lr_train_acc = accuracy_score(y_train, lr_model.predict(X_train))
     lr_test_acc = accuracy_score(y_test, lr_model.predict(X_test))
     
     print(f"Train Accuracy: {lr_train_acc:.4f}")
     print(f"Test Accuracy: {lr_test_acc:.4f}")
     
-    # Print classification report
     print("\nClassification Report:")
     print(classification_report(y_test, lr_model.predict(X_test), 
                                 target_names=["Away Win", "Home Win"]))
     
-    # Save model
     with open(LOGISTIC_MODEL, "wb") as f:
         pickle.dump(lr_model, f)
     print(f"✅ Model saved: {LOGISTIC_MODEL}")
@@ -102,6 +101,51 @@ def train_random_forest(X_train, y_train, X_test, y_test):
     print(f"✅ Model saved: {RF_MODEL}")
     
     return rf_model
+
+def train_xgboost(X_train, y_train, X_test, y_test):
+    """Train and evaluate XGBoost model"""
+    print("\n=== Training XGBoost ===")
+    
+    # XGBoost hyperparameters optimized for binary classification
+    xgb_model = xgb.XGBClassifier(
+        n_estimators=100,           # Number of boosting rounds
+        max_depth=6,                # Maximum tree depth
+        learning_rate=0.1,          # Step size shrinkage
+        subsample=0.8,              # Fraction of samples for training each tree
+        colsample_bytree=0.8,       # Fraction of features for training each tree
+        gamma=0,                    # Minimum loss reduction for split
+        reg_alpha=0,                # L1 regularization
+        reg_lambda=1,               # L2 regularization
+        random_state=42,
+        n_jobs=-1,
+        eval_metric='logloss'
+    )
+    
+    # Fit with early stopping
+    xgb_model.fit(
+        X_train, y_train,
+        eval_set=[(X_test, y_test)],
+        verbose=False
+    )
+    
+    # Calculate accuracies
+    xgb_train_acc = accuracy_score(y_train, xgb_model.predict(X_train))
+    xgb_test_acc = accuracy_score(y_test, xgb_model.predict(X_test))
+    
+    print(f"Train Accuracy: {xgb_train_acc:.4f}")
+    print(f"Test Accuracy: {xgb_test_acc:.4f}")
+    
+    # Print classification report
+    print("\nClassification Report:")
+    print(classification_report(y_test, xgb_model.predict(X_test),
+                                target_names=["Away Win", "Home Win"]))
+    
+    # Save model
+    with open(XGB_MODEL, "wb") as f:
+        pickle.dump(xgb_model, f)
+    print(f"✅ Model saved: {XGB_MODEL}")
+    
+    return xgb_model
 
 def load_and_prepare_data():
     """Load CSV and prepare train/test splits"""
@@ -153,6 +197,9 @@ def main():
     
     # Train Random Forest
     rf_model = train_random_forest(X_train, y_train, X_test, y_test)
+    
+    # Train XGBoost
+    xgb_model = train_xgboost(X_train, y_train, X_test, y_test)
     
     print("\n" + "="*60)
     print("✅ All models trained successfully!")
