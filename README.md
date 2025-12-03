@@ -1,4 +1,4 @@
-# SnapPredict 🏈
+# SnapPredict 
 
 ## Overview
 
